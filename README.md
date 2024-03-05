@@ -1,4 +1,4 @@
-# SpotFake(Pytorch)复现
+# SpotFake(Pytorch)
 
 SpotFake = VGG19 + Bert-base
 
