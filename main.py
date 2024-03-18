@@ -25,8 +25,8 @@ from data_loader import *
 from train_val import *
 
 
-df_train = pd.read_csv("/home/madm/Documents/multi_model/twitter/train_posts_clean.csv")
-df_test = pd.read_csv("/home/madm/Documents/multi_model/twitter/test_posts.csv")
+df_train = pd.read_csv("/root/autodl-tmp/fakeddit/train.tsv", sep='\t', header=0, index_col='index')
+df_test = pd.read_csv("/root/autodl-tmp/fakeddit/test.tsv", sep='\t', header=0, index_col='index')
 
 if torch.cuda.is_available():       
     device = torch.device("cuda")
@@ -47,22 +47,22 @@ image_transform = torchvision.transforms.Compose(
 )
 
 # 实例化 BERT tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+tokenizer = BertTokenizer.from_pretrained('/root/autodl-tmp/bert-base-uncased', do_lower_case=True)
 
 # 固定最大长度
 MAX_LEN = 500
-root_dir = "/home/madm/Documents/multi_model/twitter/"
+root_dir = "/root/autodl-tmp/fakeddit/"
 
 # 读取数据
-transformed_dataset_train = FakeNewsDataset(df_train, root_dir+"images_train/", image_transform, tokenizer, MAX_LEN)
+transformed_dataset_train = FakeNewsDataset(df_train[:int(df_train.shape[0]/100)], root_dir, image_transform, tokenizer, MAX_LEN)
 
-transformed_dataset_val = FakeNewsDataset(df_test, root_dir+"images_test/", image_transform, tokenizer, MAX_LEN)
+transformed_dataset_val = FakeNewsDataset(df_test, root_dir, image_transform, tokenizer, MAX_LEN)
 
-train_dataloader = DataLoader(transformed_dataset_train, batch_size=8,
-                        shuffle=True, num_workers=0)
+train_dataloader = DataLoader(transformed_dataset_train, batch_size=64,
+                        shuffle=True, num_workers=4)
 
 val_dataloader = DataLoader(transformed_dataset_val, batch_size=8,
-                        shuffle=True, num_workers=0)
+                        shuffle=True, num_workers=4)
 
 
 # 损失
@@ -117,16 +117,16 @@ scheduler = get_linear_schedule_with_warmup(optimizer,
                                             num_training_steps=total_steps)
 
 # 启动tensorboard
-writer = SummaryWriter('/home/madm/Documents/multi_model/runs/multi_att_exp3')
+writer = SummaryWriter('SummaryWriter/')
 
 # 开始
 train(model=final_model,
       loss_fn=loss_fn, optimizer=optimizer, scheduler=scheduler,
       train_dataloader=train_dataloader, val_dataloader=val_dataloader,
-      epochs=150, evaluation=True,
+      epochs=100, evaluation=False,
       device=device,
       param_dict_model=parameter_dict_model, param_dict_opt=parameter_dict_opt,
       save_best=True,
-      file_path='/home/madm/Documents/multi_model/saved_models/best_model.pt'
+      file_path='saved_models/best_model.pt'
       , writer=writer
       )

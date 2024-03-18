@@ -104,7 +104,7 @@ def train(model, loss_fn, optimizer, scheduler, train_dataloader, val_dataloader
         # =======================================
         #               Evaluation
         # =======================================
-        if evaluation == True:
+        if evaluation == True or epoch_i+1==epochs:
             # 在每个epoch训练完成后，测试模型的性能
             val_loss, val_accuracy = evaluate(model, loss_fn, val_dataloader, device)
             

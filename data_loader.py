@@ -8,6 +8,7 @@ from PIL import Image
 from skimage import io, transform
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer
+from PIL import ImageFile
 
 import torch.nn.functional as F
 from transformers import BertModel
@@ -15,6 +16,8 @@ import random
 import time
 import os
 import re
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # 预处理
 def text_preprocessing(text):
@@ -52,6 +55,7 @@ class FakeNewsDataset(Dataset):
         self.MAX_LEN = MAX_LEN
 
     def __len__(self):
+        #return int(self.csv_data.shape[0]/1000)
         return self.csv_data.shape[0]
     
     def pre_processing_BERT(self, sent):
@@ -85,20 +89,20 @@ class FakeNewsDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         
-        img_name = self.root_dir + self.csv_data['image_id'][idx] + '.jpg'
-        image = Image.open(img_name).convert("RGB")
+        img_name = os.path.join(self.root_dir, self.csv_data.iloc[idx]['#2 ImageID'])
+
+        image = Image.open(img_name)
+        if image.mode!="RGB":
+            image = image.convert("RGB")
+
         image = self.image_transform(image)
         
-        text = self.csv_data['post_text'][idx]
+        text = self.csv_data.iloc[idx]['#3 String']
         tensor_input_id, tensor_input_mask = self.pre_processing_BERT(text)
 
-        label = self.csv_data['label'][idx]
+        label = self.csv_data.iloc[idx]['#1 Label']
 
-        if label == 'fake':
-            label = '1'
-        else:
-            label = '0'
-        label = int(label)
+        #label = int(label)
         
         label = torch.tensor(label)
 

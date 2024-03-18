@@ -20,7 +20,7 @@ class TextEncoder(nn.Module):
 
         # 实例化
         self.bert = BertModel.from_pretrained(
-                    'bert-base-uncased',
+                    '/root/autodl-tmp/bert-base-uncased',
 #                     output_attentions = True, 
                     return_dict=True)
 
