@@ -123,7 +123,7 @@ writer = SummaryWriter('SummaryWriter/')
 train(model=final_model,
       loss_fn=loss_fn, optimizer=optimizer, scheduler=scheduler,
       train_dataloader=train_dataloader, val_dataloader=val_dataloader,
-      epochs=100, evaluation=False,
+      epochs=0, evaluation=True,
       device=device,
       param_dict_model=parameter_dict_model, param_dict_opt=parameter_dict_opt,
       save_best=True,

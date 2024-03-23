@@ -15,8 +15,7 @@ from transformers import AdamW, get_linear_schedule_with_warmup
 import random
 import time
 import os
-import re
-import math
+from ignite.metrics import Accuracy,Precision,Recall
 
 
 def train(model, loss_fn, optimizer, scheduler, train_dataloader, val_dataloader=None, epochs=4, evaluation=False, device='cpu', 
@@ -27,6 +26,20 @@ def train(model, loss_fn, optimizer, scheduler, train_dataloader, val_dataloader
     # 开始 training_loop
     best_acc_val = 0
     print("Start training...\n")
+    if os.path.exists(file_path):
+        info = torch.load(file_path)
+        model.load_state_dict(info['model_state_dict'])
+        """
+        ,{
+                                'epoch': epoch_i+1,
+                                'model_params': param_dict_model,
+                                'opt_params': param_dict_opt,
+                                'model_state_dict': model.state_dict(),
+                                'opt_state_dict': optimizer.state_dict(),
+                                'sch_state_dict': scheduler.state_dict()
+                               }
+        """
+
     for epoch_i in range(epochs):
         # =======================================
         #               Training
@@ -132,6 +145,7 @@ def train(model, loss_fn, optimizer, scheduler, train_dataloader, val_dataloader
                     
         print("\n")
     
+    val_loss, val_accuracy = evaluate(model, loss_fn, val_dataloader, device)
     print("Training complete!")
     
     
@@ -146,6 +160,10 @@ def evaluate(model, loss_fn, val_dataloader, device):
     # 记录损失和准确率
     val_accuracy = []
     val_loss = []
+
+    m_precision = Precision()
+    m_recall = Recall()
+    m_accuracy = Accuracy()
 
     # 每个损失之后
     for batch in val_dataloader:
@@ -174,6 +192,11 @@ def evaluate(model, loss_fn, val_dataloader, device):
         # preds = torch.argmax(logits, dim=1).flatten()
         #print(preds)
 
+        #计算混淆矩阵
+        m_precision.update((logits, b_labels))
+        m_recall.update((logits, b_labels))
+        m_accuracy.update((logits, b_labels))
+
         # 计算准确率
         accuracy = (logits == b_labels).cpu().numpy().mean() * 100
         val_accuracy.append(accuracy)
@@ -181,5 +204,6 @@ def evaluate(model, loss_fn, val_dataloader, device):
     # 计算平均准确率和验证集损失
     val_loss = np.mean(val_loss)
     val_accuracy = np.mean(val_accuracy)
+    print("m_precision ,m_recall ,m_accuracy ",m_precision.compute(),m_recall.compute(),m_accuracy.compute())
 
     return val_loss, val_accuracy
