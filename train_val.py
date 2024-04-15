@@ -16,6 +16,7 @@ import random
 import time
 import os
 from ignite.metrics import Accuracy,Precision,Recall
+from sklearn.metrics import accuracy_score, confusion_matrix
 
 
 def train(model, loss_fn, optimizer, scheduler, train_dataloader, val_dataloader=None, epochs=4, evaluation=False, device='cpu', 
@@ -165,6 +166,9 @@ def evaluate(model, loss_fn, val_dataloader, device):
     m_recall = Recall()
     m_accuracy = Accuracy()
 
+    detection_label_all = []
+    detection_pre_label_all = []
+
     # 每个损失之后
     for batch in val_dataloader:
         img_ip , text_ip, label = batch["image_id"], batch["BERT_ip"], batch['label']
@@ -201,9 +205,17 @@ def evaluate(model, loss_fn, val_dataloader, device):
         accuracy = (logits == b_labels).cpu().numpy().mean() * 100
         val_accuracy.append(accuracy)
 
+        detection_pre_label_all = detection_pre_label_all + logits.detach().cpu().numpy().tolist()
+        detection_label_all = detection_label_all+ b_labels.detach().cpu().numpy().tolist()
+
+
     # 计算平均准确率和验证集损失
     val_loss = np.mean(val_loss)
     val_accuracy = np.mean(val_accuracy)
     print("m_precision ,m_recall ,m_accuracy ",m_precision.compute(),m_recall.compute(),m_accuracy.compute())
+
+    cm_detection = confusion_matrix(detection_pre_label_all, detection_label_all)
+    print('---  TASK2 Detection Confusion Matrix  ---')
+    print('{}\n'.format(cm_detection), val_accuracy)
 
     return val_loss, val_accuracy
