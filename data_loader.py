@@ -41,7 +41,7 @@ def text_preprocessing(text):
 
 class FakeNewsDataset(Dataset):
 
-    def __init__(self, df, root_dir, image_transform, tokenizer, MAX_LEN):
+    def __init__(self, df, root_dir, image_transform, tokenizer, MAX_LEN, data_div = 1):
         """
         参数:
             csv_file (string):包含文本和图像名称的csv文件的路径
@@ -53,10 +53,11 @@ class FakeNewsDataset(Dataset):
         self.image_transform = image_transform
         self.tokenizer_bert = tokenizer
         self.MAX_LEN = MAX_LEN
+        self.data_div = data_div
 
     def __len__(self):
         #return int(self.csv_data.shape[0]/1000)
-        return self.csv_data.shape[0]
+        return int(self.csv_data.shape[0]/data_div)
     
     def pre_processing_BERT(self, sent):
 
