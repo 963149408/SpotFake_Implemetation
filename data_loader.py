@@ -57,7 +57,7 @@ class FakeNewsDataset(Dataset):
 
     def __len__(self):
         #return int(self.csv_data.shape[0]/1000)
-        return int(self.csv_data.shape[0]/data_div)
+        return int(self.csv_data.shape[0]/self.data_div)
     
     def pre_processing_BERT(self, sent):
 
